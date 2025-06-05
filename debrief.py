@@ -1,7 +1,6 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from langchain_community.document_loaders import WebBaseLoader
 from langchain_openai import OpenAI
 
 from utils import clean_text
@@ -10,15 +9,8 @@ class SiteToDebrief:
     def __init__(self, url: str):
         self.__site_url = url
         self.__site_html = self.__get_html_from_url(url)
-        self.__site_document = self.__get_document_from_url(url)
         self.__site_colors = None
         self.__site_summary = ''
-
-    def __get_document_from_url(self, url: str):
-        loader = WebBaseLoader(url)
-        # TODO: add error handling
-        documents = loader.load()
-        return documents[0].page_content
 
     def __get_html_from_url(self, url: str):
         response = requests.get(url)
@@ -43,7 +35,7 @@ class SiteToDebrief:
         for link in soup.find_all('link', rel='stylesheet'):
             css_url = link['href']
             if not css_url.startswith('http'):
-                css_url = url + css_url  # Handle relative URLs
+                css_url = self.__site_url + css_url  # Handle relative URLs
             css_response = requests.get(css_url)
             if css_response.status_code == 200:
                 css_colors.extend(re.findall(r'#[0-9a-fA-F]{6}|#[0-9a-fA-F]{3}|rgba?$\d{1,3},\s*\d{1,3},\s*\d{1,3}(?:,\s*\d?\.?\d+)?$', css_response.text))
@@ -53,7 +45,8 @@ class SiteToDebrief:
         self.__site_colors = unique_colors
 
     def __summarize_from_url(self):
-        context = """
+        llm = OpenAI()
+        context = f"""
             Summarize the webpage given at the end of the prompt in 
             100 words while mentioning the following details:
             
@@ -64,13 +57,12 @@ class SiteToDebrief:
             
             Do not give sentences that feel like you are directly stating 
             the contents from the webpage. Make it a high level summary.
+
+            {self.__site_url}
         """
-        prompt = f"{context} \n\n{self.__site_document}"
-        llm = OpenAI()
-        # TODO: add error handling
+        prompt = f"{context}"
         answer = llm.invoke(prompt)
-        cleaned_answer = clean_text(answer)
-        self.__site_summary = cleaned_answer
+        self.__site_summary = clean_text(answer)
 
     def get_site_data(self) -> dict:
         self.__extract_colors_from_url()
