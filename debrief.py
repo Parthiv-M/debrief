@@ -8,17 +8,49 @@ from utils import clean_text
 class SiteToDebrief:
     def __init__(self, url: str):
         self.__site_url = url
-        self.__site_html = self.__get_html_from_url(url)
+        response = self.__get_response_from_url()
+        if response.status_code == 200:
+            self.__site_html = response.text
+        else:
+            self.__site_html = None
         self.__site_colors = None
         self.__site_summary = ''
 
-    def __get_html_from_url(self, url: str):
-        response = requests.get(url)
+    def __get_response_from_url(self):
+        response = requests.get(self.__site_url)
         # TODO: add error handling
-        return response.text
+        return response
+
+    def __get_soup_from_html(self):
+        return BeautifulSoup(self.__site_html, 'html.parser')
+
+    def __extract_metadata_from_url(self):
+        # Parse the HTML content
+        soup = self.__get_soup_from_html()
+
+        # Extract the title
+        title = soup.title.string if soup.title else 'No title found'
+
+        # Extract meta tags
+        meta_tags = soup.find_all('meta')
+        metadata = {
+            'title': title,
+            'description': None,
+            'keywords': None,
+        }
+
+        for meta in meta_tags:
+            if 'name' in meta.attrs:
+                if meta['name'].lower() == 'description':
+                    metadata['description'] = meta.get('content', 'No description found')
+                elif meta['name'].lower() == 'keywords':
+                    metadata['keywords'] = meta.get('content', 'No keywords found')
+
+        self.__site_title = metadata['title']
+        self.__site_description = metadata['description']
 
     def __extract_colors_from_url(self):
-        soup = BeautifulSoup(self.__site_html, 'html.parser')
+        soup = self.__get_soup_from_html()
         styles = soup.find_all('style')
         css_colors = []
 
@@ -65,9 +97,12 @@ class SiteToDebrief:
         self.__site_summary = clean_text(answer)
 
     def get_site_data(self) -> dict:
+        self.__extract_metadata_from_url()
         self.__extract_colors_from_url()
         self.__summarize_from_url()
         return {
+            "site_title": self.__site_title,
+            "site_description": self.__site_description, 
             "site_url": self.__site_url,
             "site_colors": self.__site_colors,
             "site_summary": self.__site_summary
