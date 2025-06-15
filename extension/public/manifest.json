@@ -1,0 +1,28 @@
+{
+	"manifest_version": 3,
+	"name": "Debrief",
+	"version": "0.0.1",
+	"description": "Gives an AI generated summary and some meta-information about websites in your search results page.",
+	"permissions": ["activeTab", "storage"],
+	"host_permissions": ["http://debrief.onrender.com/"],
+	"content_scripts": [
+		{
+			"matches": ["https://www.google.com/search*"],
+			"js": ["index.js"],
+			"css": ["styles/index.css"]
+		}
+	],
+	"background": {
+		"service_worker": "serviceWorker.js",
+		"type": "module"
+	},
+	"icons": {
+		"48": "images/debrief.png"
+	},
+	"web_accessible_resources": [
+		{
+			"resources": ["images/debrief.png"],
+			"matches": ["https://*.google.com/*"]
+		}
+	]
+}

@@ -1,0 +1,19 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"target": "ESNext", // or "ES6"
+		"module": "commonjs", // or "ES6"
+		"moduleResolution": "node",
+		"baseUrl": ".",
+		"paths": {
+			"*": ["node_modules/*"], // Ensure TypeScript can find modules in node_modules,
+			"@utils/*": ["utils/*"]
+		},
+		"esModuleInterop": true,
+		"sourceMap": true,
+		"rootDir": ".",
+		"outDir": "dist",
+		"noEmitOnError": true,
+		"typeRoots": ["node_modules/@types"]
+	}
+}
