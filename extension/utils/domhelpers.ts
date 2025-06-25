@@ -5,7 +5,7 @@ const getDebriefIcon = (url: string | undefined): HTMLDivElement => {
 	const icon = document.createElement('img') as HTMLImageElement;
 	iconWrapper.classList.add('db-icon-wrapper');
 	icon.classList.add('db-action-icon');
-	icon.src = chrome.runtime.getURL('images/debrief.png');
+	icon.src = chrome.runtime.getURL('images/icon128.png');
 	iconWrapper.appendChild(icon);
 	if (url) {
 		icon.setAttribute('data-url', url);
